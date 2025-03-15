@@ -1,0 +1,7 @@
+google-generativeai
+colorpaws
+gradio==4.38.1
+fastapi==0.112.4
+pytubefix
+moviepy==1.0.3
+markdown-pdf

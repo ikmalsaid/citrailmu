@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "citrailmu"
+version = "25.3.0"
+authors = [
+  { name="ikmalsaid", email="ikmalsaid@gmail.com" },
+]
+description = "A powerful audio/speech transcriber and content analyzer."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "google-generativeai",
+  "colorpaws",
+  "gradio==4.38.1",
+  "fastapi==0.112.4",
+  "pytubefix",
+  "moviepy==1.0.3",
+  "markdown-pdf"
+]
+
+[project.urls]
+Homepage = "https://github.com/ikmalsaid/citrailmu"
+Issues = "https://github.com/ikmalsaid/citrailmu/issues"
