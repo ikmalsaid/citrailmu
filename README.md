@@ -42,8 +42,8 @@ client = CitraIlmu(
 )
 
 # Process media (file/URL)
-audio_file, pdf_file = client.process_media(
-    input_path="path/to/video.mp4",     # File path or URL
+audio_file, pdf_file, markdown_text = client.process_media(
+    input_path="path/to/video.mp4",     # Audio/video file path or URL
     target_language="Bahasa Malaysia",  # Target language
     processing_mode="Analysis"          # Analysis/Transcript
 )
