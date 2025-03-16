@@ -72,9 +72,10 @@ def CitraIlmuWebUI(client, host: str = None, port: int = None, browser: bool = T
                             with gr.Tab('YouTube/Video URL'):
                                 input_url = gr.Textbox(
                                     label="Input URL",
-                                    placeholder="Enter YouTube or web URL...",
+                                    placeholder="Enter URL...",
                                     lines=1,
-                                    max_lines=1
+                                    max_lines=1,
+                                    info="Enter YouTube or web URL here"
                                 )
                                 url_preview = gr.HTML()
                                 url_btn = gr.Button("Process URL", variant="primary")
@@ -93,20 +94,23 @@ def CitraIlmuWebUI(client, host: str = None, port: int = None, browser: bool = T
                                 target_language = gr.Dropdown(
                                     value="Bahasa Malaysia", 
                                     choices=["Bahasa Malaysia", "Arabic", "English", "Mandarin", "Tamil"], 
-                                    label="Target Language"
+                                    label="Target Analysis Language",
+                                    info="Select the target language for the analysis"
                                 )
                                 processing_mode = gr.Radio(
                                     choices=["Analysis", "Transcript"],
                                     value="Analysis",
                                     label="Processing Mode",
-                                    info="Analysis: Full content analysis with topics and themes | Transcript: Complete speech-to-text"
+                                    info="Analysis: Full content analysis with topics and themes | Transcript: Complete text from audio"
                                 )
                     
                 with gr.Column(scale=1):
                     with gr.Tabs():
                         with gr.Tab('Results'):
-                            audio_output = gr.Audio(label="Compressed Audio")
-                            pdf_output = gr.File(label="Download PDF Results")
+                            audio_output = gr.Audio(label="Reference Audio")
+                            pdf_output = gr.File(label="Download Results as PDF")
+                            with gr.Accordion("Read Results as Text"):
+                                results_text = gr.Markdown(value="Please process media first for reading!", height=300)
 
             gr.Markdown("<center>")
             gr.Markdown("<center>CitraIlmu can make mistakes. Check important info.")
@@ -114,9 +118,9 @@ def CitraIlmuWebUI(client, host: str = None, port: int = None, browser: bool = T
 
             # Setup event handlers
             input_url.change(fn=update_preview, inputs=[input_url], outputs=[url_preview])
-            audio_btn.click(fn=client.process_media, inputs=[input_audio, target_language, processing_mode], outputs=[audio_output, pdf_output])
-            video_btn.click(fn=client.process_media, inputs=[input_video, target_language, processing_mode], outputs=[audio_output, pdf_output])
-            url_btn.click(fn=client.process_media, inputs=[input_url, target_language, processing_mode], outputs=[audio_output, pdf_output])
+            audio_btn.click(fn=client.process_media, inputs=[input_audio, target_language, processing_mode], outputs=[audio_output, pdf_output, results_text])
+            video_btn.click(fn=client.process_media, inputs=[input_video, target_language, processing_mode], outputs=[audio_output, pdf_output, results_text])
+            url_btn.click(fn=client.process_media, inputs=[input_url, target_language, processing_mode], outputs=[audio_output, pdf_output, results_text])
         
         demo.launch(
             server_name=host,

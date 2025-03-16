@@ -32,7 +32,7 @@ class CitraIlmu:
         
         if mode != 'default':
             if mode == 'webui':
-                self.start_wui()
+                self.start_webui()
             else:
                 raise ValueError(f"Invalid startup mode: {mode}")
 
@@ -168,14 +168,14 @@ class CitraIlmu:
                 prompt = f"You are an expert audio transcriber and content analyst. Your task is to provide a transcript of the given audio file from 00:00 to {formatted_duration}. You must list down every discussed topic, themes, points and reflections in {target_language}. You must begin with the most suitable title of the speech with overview of the speech and must end with the conclusion. Do not include any opening or closing remarks."
             
             elif processing_mode.lower() == 'transcript':
-                prompt = f"You are an expert audio transcriber. Your task is to provide a transcript of the given audio file from 00:00 to {formatted_duration}. You must begin with the most suitable title of the speech with overview of the speech. Do not include any opening or closing remarks."
+                prompt = f"You are an expert audio transcriber. Your task is to provide a transcript of the given audio file from 00:00 to {formatted_duration}. You must begin with the most suitable title of the speech before the speech starts. Do not include any opening or closing remarks."
 
             else:
                 self.logger.error(f"[{task_id}] Invalid processing mode: {processing_mode}")
                 return None
 
+            self.logger.info(f"[{task_id}] Uploading audio for processing...")
             audio_file = genai.upload_file(path=input_path)
-            self.logger.info(f"[{task_id}] Uploading audio: {audio_file}")
 
             self.logger.info(f"[{task_id}] Processing AI {processing_mode}...")
             model = genai.GenerativeModel(self.aigc_model)
@@ -191,7 +191,7 @@ class CitraIlmu:
         """Convert markdown to PDF"""
         try:
             filename = re.sub(r'[^\w\-]', '_', os.path.splitext(os.path.basename(original_path))[0])
-            clean_filename = f"{filename}_{processing_mode.lower()}_{target_language.lower().replace(' ', '_')}"
+            clean_filename = f"{filename}_{processing_mode.lower()}" + (f"_{target_language.lower().replace(' ', '_')}" if processing_mode.lower() == 'analysis' else '')
             pdf_path = os.path.join(tempfile.gettempdir(), f"{clean_filename}.pdf")
             
             self.logger.info(f"[{task_id}] Generating PDF: {pdf_path}")
@@ -203,11 +203,6 @@ class CitraIlmu:
                 font-family: 'Segoe UI', sans-serif;
                 text-align: justify;
                 text-justify: inter-word;
-            }
-            
-            /* Arabic text specific */
-            [lang='ar'] {
-                direction: rtl;
             }
             
             table, th, td {
@@ -274,7 +269,7 @@ class CitraIlmu:
         task_id = f"{timestamp}_{uuid_part}"
         return task_id
 
-    def process_media(self, input_path, target_language, processing_mode):
+    def process_media(self, input_path, target_language="Bahasa Malaysia", processing_mode="Analysis"):
         """Process media for specified target language and processing mode.
         
         Parameters:
@@ -282,31 +277,40 @@ class CitraIlmu:
             target_language (str): Target language for the analysis ('bahasa malaysia', 'arabic', 'english', 'mandarin', 'tamil')
             processing_mode (str): Processing mode ('analysis' or 'transcript')
         """
+        if not input_path or input_path == "":
+            raise ValueError("Input path is required!")
+        
+        elif target_language not in ["Bahasa Malaysia", "Arabic", "English", "Mandarin", "Tamil"]:
+            raise ValueError("Invalid target language!")
+        
+        elif processing_mode not in ["Analysis", "Transcript"]:
+            raise ValueError("Invalid processing mode!")
+        
         task_id = self.__get_taskid()
-        self.logger.info(f"[{task_id}] Task started: {processing_mode} in {target_language}")
+        self.logger.info(f"[{task_id}] Task started: {processing_mode}" + (f" in {target_language}" if processing_mode == "Analysis" else ""))
 
         try:
             compressed_file = self.__media_processor(input_path, task_id)
             if not compressed_file:
-                return None, None
+                return None, None, None
             
             markdown_text = self.__aigc_processor(compressed_file, target_language, processing_mode, task_id)
             if not markdown_text:
-                return compressed_file, None
+                return compressed_file, None, None
             
             pdf_file = self.__markdown_to_pdf(markdown_text, compressed_file, target_language, processing_mode, task_id)
             if not pdf_file:
-                return compressed_file, None
+                return compressed_file, None, markdown_text
             
             self.logger.info(f"[{task_id}] Task completed successfully")
-            return compressed_file, pdf_file
+            return compressed_file, pdf_file, markdown_text
             
         except Exception as e:
             self.logger.error(f"[{task_id}] Task failed: {str(e)}")
-            return None, None
+            return None, None, None
         
-    def start_wui(self, host: str = "0.0.0.0", port: int = 24873, browser: bool = True,
-                  upload_size: str = "100MB", public: bool = False, limit: int = 10):
+    def start_webui(self, host: str = "0.0.0.0", port: int = 24873, browser: bool = True,
+                    upload_size: str = "100MB", public: bool = False, limit: int = 10):
         """
         Start Citrailmu WebUI with all features.
         
