@@ -8,7 +8,7 @@ version = "25.3.1"
 authors = [
   { name="ikmalsaid", email="ikmalsaid@gmail.com" },
 ]
-description = "A powerful audio/speech transcriber and content analyzer."
+description = "Convert lectures/talks from video/audio/YouTube into text (#GodamSahur 2025)"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
