@@ -287,7 +287,7 @@ class CitraIlmu:
             raise ValueError("Invalid processing mode!")
         
         task_id = self.__get_taskid()
-        self.logger.info(f"[{task_id}] Task started: {processing_mode}" + (f" in {target_language}" if processing_mode == "Analysis" else ""))
+        self.logger.info(f"[{task_id}] Task started: {processing_mode}" + (f" in {target_language}" if processing_mode.lower() == 'analysis' else ''))
 
         try:
             compressed_file = self.__media_processor(input_path, task_id)
