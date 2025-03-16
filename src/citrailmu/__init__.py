@@ -280,10 +280,10 @@ class CitraIlmu:
         if not input_path or input_path == "":
             raise ValueError("Input path is required!")
         
-        elif target_language not in ["Bahasa Malaysia", "Arabic", "English", "Mandarin", "Tamil"]:
+        elif target_language.lower() not in ["bahasa malaysia", "arabic", "english", "mandarin", "tamil"]:
             raise ValueError("Invalid target language!")
         
-        elif processing_mode not in ["Analysis", "Transcript"]:
+        elif processing_mode.lower() not in ["analysis", "transcript"]:
             raise ValueError("Invalid processing mode!")
         
         task_id = self.__get_taskid()
