@@ -20,7 +20,7 @@ class CitraIlmu:
         Initialize Citrailmu module.
         
         Parameters:
-            mode (str): Startup mode ('default', 'webui', or 'api')
+            mode (str): Startup mode ('default' or 'webui')
             api_key (str): API key for AI services
             model (str): AI model to use
         """

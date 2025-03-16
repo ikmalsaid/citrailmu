@@ -2,6 +2,8 @@
 
 Convert lectures/talks from video/audio/YouTube into text (#GodamSahur 2025).
 
+![CitraIlmu Web UI](assets/thumb.webp)
+
 ## Installation
 
 ```bash
@@ -43,7 +45,7 @@ client = CitraIlmu(
 audio_file, pdf_file = client.process_media(
     input_path="path/to/video.mp4",     # File path or URL
     target_language="Bahasa Malaysia",  # Target language
-    processing_mode="analysis"          # analysis/transcript
+    processing_mode="Analysis"          # Analysis/Transcript
 )
 ```
 
@@ -54,7 +56,7 @@ Start the Gradio web interface:
 ```python
 client = CitraIlmu(mode="webui")
 # OR
-client.start_wui(
+client.start_webui(
     host="0.0.0.0",      # Server host
     port=24873,          # Server port
     browser=True,        # Launch browser
