@@ -15,7 +15,7 @@ from markdown_pdf import MarkdownPdf, Section
 class CitraIlmu:
     """Copyright (C) 2025 Ikmal Said. All rights reserved"""
     
-    def __init__(self, mode='default', api_key=None, model='gemini-1.5-flash-8b'):
+    def __init__(self, mode='default', api_key=None, model='gemini-1.5-flash-8b', yt_api=False, yt_api_key=None):
         """
         Initialize Citrailmu module.
         
@@ -23,11 +23,15 @@ class CitraIlmu:
             mode (str): Startup mode ('default' or 'webui')
             api_key (str): API key for AI services
             model (str): AI model to use
+            yt_api (bool): Use YouTube API
+            yt_api_key (str): YouTube API key
         """
         self.logger = ColorPaws(name=self.__class__.__name__, log_on=True, log_to=None)
         self.aigc_model = model
         self.api_key = api_key
-        
+        self.yt_api = yt_api
+        self.yt_api_key = yt_api_key
+
         self.logger.info("CitraIlmu is ready!")
         
         if mode != 'default':
@@ -90,7 +94,10 @@ class CitraIlmu:
                 return self.__compress_audio(input_path, task_id)
             
             elif self.__is_youtube_url(input_path):
-                return self.__process_youtube(input_path, task_id)
+                if self.yt_api:
+                    return self.__process_youtube_api(input_path, task_id)
+                else:
+                    return self.__process_youtube(input_path, task_id)
             
             elif self.__is_url(input_path):
                 return self.__process_web_url(input_path, task_id)
@@ -103,12 +110,62 @@ class CitraIlmu:
             self.logger.error(f"[{task_id}] Media processing failed: {str(e)}")
             return None
 
+    def __process_youtube_api(self, url, task_id):
+        """Process YouTube URL using API"""
+        if self.yt_api_key: 
+            api_key = self.yt_api_key
+        else: 
+            api_key = os.getenv('YT_API_KEY')
+            
+        if not api_key:
+            raise ValueError("No API key available. Please set YT_API_KEY environment variable or provide it during initialization")
+      
+        self.logger.info(f"[{task_id}] Processing YouTube URL via API: {url}")
+        try:        
+            rapidapi_url = "https://downwee-video-downloader.p.rapidapi.com/download"
+            payload = {"url": url}
+            headers = {
+                "x-rapidapi-key": api_key,
+                "x-rapidapi-host": "downwee-video-downloader.p.rapidapi.com",
+                "Content-Type": "application/json"
+            }
+
+            response = requests.post(rapidapi_url, json=payload, headers=headers)
+            response.raise_for_status()
+            
+            video_data = response.json()
+            video_url = video_data.get("videoUrl")
+            video_title = video_data.get("title")
+            
+            if not video_url:
+                raise ValueError("No video URL found in the response")
+            
+            self.logger.info(f"[{task_id}] Downloading video: '{video_title}'")
+            
+            clean_title = re.sub(r'[^\w\-]', '_', video_title)
+            temp_path = os.path.join(tempfile.gettempdir(), f"{task_id}_{clean_title}.mp4")
+
+            with open(temp_path, 'wb') as f:
+                f.write(requests.get(video_url).content)
+            
+            compressed_audio = self.__compress_audio(temp_path, task_id)
+            
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+            
+            return compressed_audio
+        
+        except ValueError as e:
+            self.logger.error(f"[{task_id}] Youtube API processing failed: {str(e)}")
+            return None
+
     def __process_youtube(self, url, task_id):
         """Process YouTube URL"""
         self.logger.info(f"[{task_id}] Processing YouTube URL: {url}")
         try:
             yt = YouTube(url, on_progress_callback=on_progress)
             temp_filename = f"{task_id}_{yt.title}.m4a"
+            
             downloaded_file = yt.streams.get_audio_only().download(
                 output_path=tempfile.gettempdir(),
                 filename=temp_filename
@@ -302,7 +359,7 @@ class CitraIlmu:
             if not pdf_file:
                 return compressed_file, None, markdown_text
             
-            self.logger.info(f"[{task_id}] Task completed successfully")
+            self.logger.info(f"[{task_id}] Task completed successfully!")
             return compressed_file, pdf_file, markdown_text
             
         except Exception as e:

@@ -36,9 +36,11 @@ from citrailmu import CitraIlmu
 
 # Initialize
 client = CitraIlmu(
-    mode="default",              # Mode (default/webui)
-    api_key="YOUR_KEY",          # AI service API key
-    model="gemini-1.5-flash-8b"  # AI model to use
+    mode="default",               # Mode (default/webui)
+    api_key="YOUR_KEY",           # AI service API key
+    model="gemini-1.5-flash-8b",  # AI model to use
+    yt_api=False,                 # Use YouTube API (optional)
+    yt_api_key="YOUR_YT_API_KEY"  # YouTube API key (optional)
 )
 
 # Process media (file/URL)
@@ -78,6 +80,10 @@ client.start_webui(
 ### Processing Modes
 - **Analysis**: Full content analysis with topics and themes
 - **Transcript**: Complete speech-to-text conversion
+
+### YouTube Processing Options
+- **API Mode**: Uses web API for video downloading (requires API key)
+- **Default Mode**: Uses native method for video downloading (no API key required)
 
 ### PDF Result Format
 - Title and Overview
