@@ -2,6 +2,7 @@ import os
 import re
 import time
 import uuid
+import base64
 import requests
 import tempfile
 from datetime import datetime
@@ -110,6 +111,10 @@ class CitraIlmu:
             self.logger.error(f"[{task_id}] Media processing failed: {str(e)}")
             return None
 
+    def __convert_b64(self, url):
+        """Convert URL from base64 to string"""
+        return base64.b64decode(url).decode('utf-8')
+
     def __process_youtube_api(self, url, task_id):
         """Process YouTube URL using API"""
         if self.yt_api_key: 
@@ -122,15 +127,17 @@ class CitraIlmu:
       
         self.logger.info(f"[{task_id}] Processing YouTube URL via API: {url}")
         try:        
-            rapidapi_url = "https://downwee-video-downloader.p.rapidapi.com/download"
+            endpoint = self.__convert_b64("ZG93bndlZS12aWRlby1kb3dubG9hZGVyLnAucmFwaWRhcGkuY29t")
+            
+            api_url = f"https://{endpoint}/download"
             payload = {"url": url}
             headers = {
                 "x-rapidapi-key": api_key,
-                "x-rapidapi-host": "downwee-video-downloader.p.rapidapi.com",
+                "x-rapidapi-host": endpoint,
                 "Content-Type": "application/json"
             }
 
-            response = requests.post(rapidapi_url, json=payload, headers=headers)
+            response = requests.post(api_url, json=payload, headers=headers)
             response.raise_for_status()
             
             video_data = response.json()
@@ -145,8 +152,36 @@ class CitraIlmu:
             clean_title = re.sub(r'[^\w\-]', '_', video_title)
             temp_path = os.path.join(tempfile.gettempdir(), f"{task_id}_{clean_title}.mp4")
 
+            # Download with progress tracking and validation
+            video_response = requests.get(video_url, stream=True)
+            video_response.raise_for_status()
+            
+            block_size = 8192
+            downloaded = 0
+            
             with open(temp_path, 'wb') as f:
-                f.write(requests.get(video_url).content)
+                for chunk in video_response.iter_content(chunk_size=block_size):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+            
+            # Validate downloaded file
+            if not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
+                raise ValueError("Downloaded file is empty or does not exist")
+                
+            if os.path.getsize(temp_path) < 1024:  # Less than 1KB is suspicious
+                raise ValueError("Downloaded file is too small to be valid")
+            
+            # Try to verify the file is a valid video
+            try:
+                audio = AudioFileClip(temp_path)
+                audio.close()
+            
+            except Exception as e:
+                self.logger.error(f"[{task_id}] Invalid video file: {str(e)}")
+                if os.path.exists(temp_path):
+                    os.unlink(temp_path)
+                return None
             
             compressed_audio = self.__compress_audio(temp_path, task_id)
             
@@ -157,6 +192,13 @@ class CitraIlmu:
         
         except ValueError as e:
             self.logger.error(f"[{task_id}] Youtube API processing failed: {str(e)}")
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+            return None
+        except Exception as e:
+            self.logger.error(f"[{task_id}] Unexpected error during YouTube processing: {str(e)}")
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
             return None
 
     def __process_youtube(self, url, task_id):
