@@ -1,7 +1,7 @@
 import gradio as gr
 
-def CitraIlmuWebUI(client, host: str = None, port: int = None, browser: bool = True,
-                   upload_size: str = "4MB", public: bool = False, limit: int = 10):
+def CitraIlmuWebUI(client, host: str = None, port: int = None, browser: bool = True, upload_size: str = "4MB",
+                   public: bool = False, limit: int = 10, quiet: bool = False):
     """ 
     Start Citrailmu Web UI with all features.
     
@@ -13,6 +13,7 @@ def CitraIlmuWebUI(client, host: str = None, port: int = None, browser: bool = T
     - upload_size (str): Maximum file size for uploads
     - public (bool): Enable public URL mode
     - limit (int): Maximum number of concurrent requests
+    - quiet (bool): Quiet mode
     """
     try:
         def update_preview(url):
@@ -128,7 +129,7 @@ def CitraIlmuWebUI(client, host: str = None, port: int = None, browser: bool = T
             inbrowser=browser,
             max_file_size=upload_size,
             share=public,
-            quiet=True
+            quiet=quiet
         )
     
     except Exception as e:

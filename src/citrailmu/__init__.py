@@ -127,25 +127,33 @@ class CitraIlmu:
       
         self.logger.info(f"[{task_id}] Processing YouTube URL via API: {url}")
         try:        
-            endpoint = self.__convert_b64("ZG93bndlZS12aWRlby1kb3dubG9hZGVyLnAucmFwaWRhcGkuY29t")
-            
-            api_url = f"https://{endpoint}/download"
+            endpoint = self.__convert_b64("eW91dHViZS12aWRlby1hbmQtc2hvcnRzLWRvd25sb2FkZXIxLnAucmFwaWRhcGkuY29t")
+
+            api_url = f"https://{endpoint}/api/getYTVideo"
             payload = {"url": url}
             headers = {
                 "x-rapidapi-key": api_key,
-                "x-rapidapi-host": endpoint,
-                "Content-Type": "application/json"
+                "x-rapidapi-host": endpoint
             }
 
-            response = requests.post(api_url, json=payload, headers=headers)
+            response = requests.get(api_url, params=payload, headers=headers)
             response.raise_for_status()
             
             video_data = response.json()
-            video_url = video_data.get("videoUrl")
-            video_title = video_data.get("title")
+            video_title = video_data.get("description")
             
-            if not video_url:
-                raise ValueError("No video URL found in the response")
+            # Find the audio-only link with low quality
+            download_link = None
+            for link_data in video_data.get("links", []):
+                if link_data.get("quality") == "video_render_480p (video+audio)":
+                    download_link = link_data.get("link")
+                    break
+            
+            if not download_link:
+                raise ValueError("No audio-only URL found in the response")
+            
+            if not video_title:
+                raise ValueError("No video title found in the response")
             
             self.logger.info(f"[{task_id}] Downloading video: '{video_title}'")
             
@@ -153,50 +161,34 @@ class CitraIlmu:
             temp_path = os.path.join(tempfile.gettempdir(), f"{task_id}_{clean_title}.mp4")
 
             # Download with progress tracking and validation
-            video_response = requests.get(video_url, stream=True)
-            video_response.raise_for_status()
+            download_response = requests.get(download_link, stream=True)
+            download_response.raise_for_status()
             
             block_size = 8192
             downloaded = 0
             
             with open(temp_path, 'wb') as f:
-                for chunk in video_response.iter_content(chunk_size=block_size):
+                for chunk in download_response.iter_content(chunk_size=block_size):
                     if chunk:
                         f.write(chunk)
                         downloaded += len(chunk)
-            
+
             # Validate downloaded file
             if not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
                 raise ValueError("Downloaded file is empty or does not exist")
                 
-            if os.path.getsize(temp_path) < 1024:  # Less than 1KB is suspicious
+            if os.path.getsize(temp_path) < 1024:  # Less than 1KB is sus
                 raise ValueError("Downloaded file is too small to be valid")
             
-            # Try to verify the file is a valid video
-            try:
-                audio = AudioFileClip(temp_path)
-                audio.close()
-            
-            except Exception as e:
-                self.logger.error(f"[{task_id}] Invalid video file: {str(e)}")
-                if os.path.exists(temp_path):
-                    os.unlink(temp_path)
-                return None
-            
-            compressed_audio = self.__compress_audio(temp_path, task_id)
-            
+            compressed_audio = self.__compress_audio(temp_path, task_id) 
+
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
-            
+
             return compressed_audio
         
         except ValueError as e:
             self.logger.error(f"[{task_id}] Youtube API processing failed: {str(e)}")
-            if os.path.exists(temp_path):
-                os.unlink(temp_path)
-            return None
-        except Exception as e:
-            self.logger.error(f"[{task_id}] Unexpected error during YouTube processing: {str(e)}")
             if os.path.exists(temp_path):
                 os.unlink(temp_path)
             return None
@@ -408,8 +400,8 @@ class CitraIlmu:
             self.logger.error(f"[{task_id}] Task failed: {str(e)}")
             return None, None, None
         
-    def start_webui(self, host: str = "0.0.0.0", port: int = 24873, browser: bool = True,
-                    upload_size: str = "100MB", public: bool = False, limit: int = 10):
+    def start_webui(self, host: str = "0.0.0.0", port: int = 24873, browser: bool = True, upload_size: str = "100MB",
+                    public: bool = False, limit: int = 10, quiet: bool = False):
         """
         Start Citrailmu WebUI with all features.
         
@@ -420,7 +412,8 @@ class CitraIlmu:
         - upload_size (str): Maximum file size for uploads (default: "100MB")
         - public (bool): Enable public URL mode (default: False)
         - limit (int): Maximum number of concurrent requests (default: 10)
+        - quiet (bool): Quiet mode (default: False)
         """
         from .webui import CitraIlmuWebUI
-        CitraIlmuWebUI(self, host=host, port=port, browser=browser,
-                       upload_size=upload_size, public=public, limit=limit)
+        CitraIlmuWebUI(self, host=host, port=port, browser=browser, upload_size=upload_size,
+                       public=public, limit=limit, quiet=quiet)
