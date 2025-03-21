@@ -72,7 +72,7 @@ class CitraIlmu:
                 audio = audio.audio_fadeout(0.1)
                 audio.write_audiofile(
                     temp_path,
-                    fps=22050,
+                    fps=44100,
                     nbytes=2,
                     bitrate="16k",
                     ffmpeg_params=["-ac", "1"],
@@ -198,8 +198,11 @@ class CitraIlmu:
         self.logger.info(f"[{task_id}] Processing YouTube URL: {url}")
         try:
             yt = YouTube(url, on_progress_callback=on_progress)
-            temp_filename = f"{task_id}_{yt.title}.m4a"
+            clean_title = re.sub(r'[^\w\-]', '_', yt.title)
+            temp_filename = f"{task_id}_{clean_title}.m4a"
             
+            self.logger.info(f"[{task_id}] Downloading video: '{yt.title}'")
+
             downloaded_file = yt.streams.get_audio_only().download(
                 output_path=tempfile.gettempdir(),
                 filename=temp_filename
