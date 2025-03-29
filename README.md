@@ -59,7 +59,7 @@ Start the Gradio web interface:
 client = CitraIlmu(mode="webui")
 # OR
 client.start_webui(
-    host="0.0.0.0",      # Server host
+    host="localhost",    # Server host
     port=7860,           # Server port
     browser=False,       # Launch browser
     upload_size="100MB", # Max upload size
