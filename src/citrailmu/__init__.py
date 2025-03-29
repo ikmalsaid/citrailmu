@@ -403,14 +403,14 @@ class CitraIlmu:
             self.logger.error(f"[{task_id}] Task failed: {str(e)}")
             return None, None, None
         
-    def start_webui(self, host: str = "0.0.0.0", port: int = 7860, browser: bool = False, upload_size: str = "100MB",
+    def start_webui(self, host: str = None, port: int = None, browser: bool = False, upload_size: str = "100MB",
                     public: bool = False, limit: int = 10, quiet: bool = False):
         """
         Start Citrailmu WebUI with all features.
         
         Parameters:
-        - host (str): Server host (default: "0.0.0.0")
-        - port (int): Server port (default: 7860) 
+        - host (str): Server host (default: None)
+        - port (int): Server port (default: None) 
         - browser (bool): Launch browser automatically (default: False)
         - upload_size (str): Maximum file size for uploads (default: "100MB")
         - public (bool): Enable public URL mode (default: False)

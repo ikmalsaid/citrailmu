@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "citrailmu"
-version = "25.3.5"
+version = "25.3.6"
 authors = [
   { name="ikmalsaid", email="ikmalsaid@gmail.com" },
 ]

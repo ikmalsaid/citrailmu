@@ -60,7 +60,7 @@ client = CitraIlmu(mode="webui")
 # OR
 client.start_webui(
     host="0.0.0.0",      # Server host
-    port=7680,           # Server port
+    port=7860,           # Server port
     browser=False,       # Launch browser
     upload_size="100MB", # Max upload size
     public=False,        # Enable public URL
