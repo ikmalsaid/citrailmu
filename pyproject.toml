@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "citrailmu"
-version = "25.3.7"
+version = "25.3.8"
 authors = [
   { name="ikmalsaid", email="ikmalsaid@gmail.com" },
 ]
@@ -20,7 +20,9 @@ classifiers = [
 dependencies = [
   "google-generativeai",
   "colorpaws",
-  "gradio",
+  "gradio==4.38.1",
+  "fastapi==0.112.4",
+  "pydantic==2.10.6",
   "pytubefix",
   "moviepy==1.0.3",
   "markdown-pdf"

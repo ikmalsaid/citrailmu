@@ -62,8 +62,9 @@ def CitraIlmuWebUI(client, host: str = None, port: int = None, browser: bool = T
         )
     
         with gr.Blocks(title="CitraIlmu", analytics_enabled=False, theme=gr_theme, css=gr_css).queue(default_concurrency_limit=limit) as demo:
-            gr.Markdown("<h1><center>CitraIlmu Web UI")
-            gr.Markdown("<h3><center>Made for #GodamSahur 2025 by Ikmal Said")
+            gr.Markdown("## <br><center>CitraIlmu Web UI")
+            gr.Markdown("<center>Made for #GodamSahur 2025 by Ikmal Said")
+            gr.Markdown("<center>")
 
             with gr.Row():
                 with gr.Column():
@@ -103,10 +104,7 @@ def CitraIlmuWebUI(client, host: str = None, port: int = None, browser: bool = T
                                     label="Processing Mode",
                                     info="Analysis: Full content analysis with topics and themes | Transcript: Complete text from audio"
                                 )
-
-                    gr.Markdown("<center>")
-                    gr.Markdown("<center>CitraIlmu can make mistakes. Check important info.")
-
+                    
                 with gr.Column(scale=1):
                     with gr.Tabs():
                         with gr.Tab('Results'):
@@ -114,6 +112,10 @@ def CitraIlmuWebUI(client, host: str = None, port: int = None, browser: bool = T
                             pdf_output = gr.File(label="Download Results as PDF")
                             with gr.Accordion("Read Results as Text"):
                                 results_text = gr.Markdown(value="Please process media first for reading!", height=300)
+
+            gr.Markdown("<center>")
+            gr.Markdown("<center>CitraIlmu can make mistakes. Check important info.")
+            gr.Markdown("<center>")
 
             # Setup event handlers
             input_url.change(fn=update_preview, inputs=[input_url], outputs=[url_preview])
